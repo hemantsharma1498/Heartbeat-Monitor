@@ -130,6 +130,22 @@ lib.delete=function(dir, file, callback){
     
 };
 
+//List all files in the directory
+lib.list=function(dir, callback){
+    fs.readdir(lib.baseDir+dir+'/', function(err, data){
+        if(!err&&data&&data.length>0){
+            let list=[];
+            data.forEach(function(fileName){
+                list.push(fileName.replace('.json', ''));
+            });
+            callback(false, list);
+        }else{
+            callback(err, data);
+        }
+    });
+};
+
+
 
 
 //Export the module
