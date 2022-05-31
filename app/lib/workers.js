@@ -126,7 +126,7 @@ workers.performCheck=function(ogCheckData){
     req.on('timeout', function(e){
         //Update checkOutcome
         checkOutcome.error={
-            'error':error,
+            'error':true,
             'value':'timeout'
         };
 
@@ -145,7 +145,7 @@ workers.performCheck=function(ogCheckData){
 //Special logic for previously untested check, no alerts
 workers.processCheckOutcome=function(ogCheckData, checkOutcome){
     //Decide if check is 'up' or 'down'
-    let state=!checkOutcome.error&&checkOutcome.responseCode&&checkOutcome.responseCode&&ogCheckData.successCodes.indexOf(checkOutcome.responseCode)>-1?'up':'down';
+    let state=!checkOutcome.error&&checkOutcome.responseCode&&ogCheckData.successCodes.indexOf(checkOutcome.responseCode)>-1?'up':'down';
 
     //Decide if an alert is needed
     let alertWarranted=ogCheckData.lastChecked&&ogCheckData.state!=state?true:false;
@@ -154,6 +154,10 @@ workers.processCheckOutcome=function(ogCheckData, checkOutcome){
     let newCheckData=ogCheckData;
     newCheckData.state=state;
     newCheckData.lastChecked=Date.now();
+
+    console.log(checkOutcome, state, alertWarranted);
+
+
 
     //Save the updates to disk
     _data.update('checks', newCheckData.id, newCheckData, function(err){
