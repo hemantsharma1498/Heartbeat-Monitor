@@ -11,6 +11,8 @@ const _data=require('./data');
 const helpers = require('./helpers');
 const handlers=require('./handlers');
 const path=require('path');
+const util=require('util');
+const debug=util.debuglog('server');
 
 
 //Instantiate the server module object
@@ -94,7 +96,13 @@ server.unifiedServer=function(req, res){
             res.setHeader('Content-type', 'application/JSON')
             res.writeHead(statusCode);
             res.end(payloadString);
-            console.log('Return response: ', statusCode, payloadString);
+
+            //If the response is 200, print green. Otherwise print red
+            if(statusCode==200){
+                debug('\x1b[32m%s\x1b[0m', method.toUpperCase()+'/ '+trimmedPath+' '+statusCode);
+            }else{
+                debug('\x1b[31m%s\x1b[0m', method.toUpperCase()+'/ '+trimmedPath+' '+statusCode);
+            }
         });
 
 
@@ -109,12 +117,13 @@ server.init=function(){
 
     //Starting the HTTP server
     server.httpServer.listen(config.httpPort, function(){
-        console.log("Server is listening on port: "+config.httpPort);
+    console.log('\x1b[34m%s\x1b[0m', "Server is listening on port: "+config.httpPort);
     });
 
     //Start the HTTPS server
     server.httpsServer.listen(config.httpsPort, function(){
-        console.log("Server is listening on port: "+config.httpsPort);
+        console.log('\x1b[35m%s\x1b[0m', "Server is listening on port: "+config.httpsPort);
+    
     });
 
 };

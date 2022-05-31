@@ -7,7 +7,9 @@ const https=require('https');
 const helpers=require('./helpers');
 const url=require('url');
 const { type } = require('os');
-
+const _logs=require('./logs');
+const util=require('util');
+const debug=util.debuglog('workers');
 
 //Creating workers object
 let workers={};
@@ -24,12 +26,12 @@ workers.gatherAllChecks=function(){
                         //Validator will let the function continue or log an error
                         workers.validateCheckData(ogCheckData);
                     }else{
-                        console.log("Error: Could not read check(s) data")
+                        debug("Error: Could not read check(s) data")
                     }
                 });
             });
         }else{
-            console.log("Error: Could not find any checks to prcoess");
+            debug("Error: Could not find any checks to prcoess");
         }
     });
 };
@@ -62,7 +64,7 @@ workers.validateCheckData=function(ogCheckData){
      ){
         workers.performCheck(ogCheckData);
      }else{
-         console.log("Error: Impropper formatting. Skipping.");
+         debug("Error: Impropper formatting. Skipping.");
      }
 
 };
@@ -150,13 +152,14 @@ workers.processCheckOutcome=function(ogCheckData, checkOutcome){
     //Decide if an alert is needed
     let alertWarranted=ogCheckData.lastChecked&&ogCheckData.state!=state?true:false;
 
+    let checkTime=Date.now();
+    workers.log(ogCheckData, checkOutcome, state, alertWarranted, checkTime);
+
+
     //Update the check data
     let newCheckData=ogCheckData;
     newCheckData.state=state;
     newCheckData.lastChecked=Date.now();
-
-    console.log(checkOutcome, state, alertWarranted);
-
 
 
     //Save the updates to disk
@@ -165,10 +168,10 @@ workers.processCheckOutcome=function(ogCheckData, checkOutcome){
             if(alertWarranted){
                 workers.alertUser(newCheckData);
             }else{
-                console.log("Check outcome unchanged");
+                debug("Check outcome unchanged");
             }
         }else{
-            console.log("Error while saving updates to check");
+            debug("Error while saving updates to check");
         }
     });
 };
@@ -179,12 +182,36 @@ workers.alertUser=function(newCheckData){
     let msg='Alert: Your check for '+newCheckData.method.toUpperCase()+' '+newCheckData.protocol+'://'+newCheckData.url+' is currently '+newCheckData.state;
     helpers.sendTwilioSms(newCheckData.phone, msg, function(err){
         if(!err){
-            console.log("User alerted successfully via SMS: ", msg);
+            debug("User alerted successfully via SMS: ", msg);
         }else{
-            console.log("Unable to alert user to state change");
+            debug("Unable to alert user to state change");
         }
     });
 }
+
+
+workers.log=function(ogCheckData, checkOutcome, state, alertWarranted, checkTime){
+    let logData={
+        'check':ogCheckData,
+        'outcome':checkOutcome,
+        'state':state,
+        'alert':alertWarranted,
+        'time':checkTime
+    }
+
+    //Convert JSON object to JSON string
+    let logDataString=JSON.stringify(logData);
+
+    //Determine the name of the log file
+    let logFileName=ogCheckData.id;
+    _logs.append(logFileName, logDataString, function(err){
+        if(!err){
+            debug("Log successfull");
+        }else{ 
+            debug("Unable to save log to file");
+        }
+    });
+};
 
 
 
@@ -196,13 +223,63 @@ workers.loop=function(){
 }
 
 
+//Rotate (compress) log files
+workers.rotateLogs=function(){
+    //List all uncompressed files in .log
+    _logs.list(false, function(err, logs){
+        if(!err&&logs&&logs.length>0){
+            logs.forEach(function(logName){
+                //Compress data to a different file
+                let logId=logName.replace('.log', '');
+                let compressFileId=logId+'-'+Date.now();
+
+                _logs.compress(logId, compressFileId, function(err){
+                    if(!err){
+                        //Truncate the log
+                        _logs.truncate(logId, function(err){
+                            if(!err){
+                                debug("Success truncating log file");
+                            }else{
+                                debug("Unable to truncate log file");
+                            }
+                        });
+                    }else{
+                        debug("Error compress log files", err);
+                    }
+                });
+            });
+        }else{
+            debug('No logs to rotate');
+        }
+    });
+}
+
+
+//Timer to execute the log process once a day
+workers.logRotationLoop=function(){
+    setInterval(function(){
+        workers.rotateLogs();
+    }, 1000*60*60*24);
+};
+
+
+
 //Instantiate the object
 workers.init=function(){
+    //Send to console in yellow
+    console.log('\x1b[33m%s\x1b[0m', 'Background workers are running');
+
     //Execute all the checks immediately
     workers.gatherAllChecks();
 
     //Call the loop so the checks will exceute later
     workers.loop();
+
+    //Compress all logs immmediately
+    workers.rotateLogs();
+
+    //Call the compression loop, so logs get compressed later on
+    workers.logRotationLoop();
 };
 
 
