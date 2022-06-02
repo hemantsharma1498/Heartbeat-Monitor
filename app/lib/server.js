@@ -12,6 +12,7 @@ const helpers = require('./helpers');
 const handlers=require('./handlers');
 const path=require('path');
 const util=require('util');
+const { type } = require('os');
 const debug=util.debuglog('server');
 
 
@@ -69,6 +70,9 @@ server.unifiedServer=function(req, res){
 
         var chosenHandler=typeof(server.router[trimmedPath])!== 'undefined'?server.router[trimmedPath]:handlers.notFound;
 
+        //If request is within the public directory, use public handler instead
+        chosenHandler=trimmedPath.indexOf('public/')>-1?handlers.public:chosenHandler;
+
         //Construct the data object to send to the handler
 
         var data={
@@ -82,18 +86,50 @@ server.unifiedServer=function(req, res){
        
 
         //Route the request to the handler specified
-        chosenHandler(data, function(statusCode, payload){
+        chosenHandler(data, function(statusCode, payload, contentType){
+            
+            //Determine the type of response
+            contentType=typeof(contentType)=='string'?contentType:'json';
+
             //Use the status code called back by the handler or default to empty object
             statusCode=typeof(statusCode)=='number'?statusCode:200;
             
-            //use the payload called back by the handler or default to empty object
-            payload=typeof(payload)=='object'?payload:{};
+            let payloadString;
+            //Return the response parts that are content specific
+            if(contentType=='json'){
+                res.setHeader('Content-type', 'application/json')
+                payload=typeof(payload)=='object'?payload:{};
+                payloadString=JSON.stringify(payload);
+            }else if(contentType=='html'){
+                res.setHeader('Content-type', 'text/html');
+                payloadString=typeof(payload)=='string'?payload:'';
 
-            //Convert the payload to a string
-            var payloadString=JSON.stringify(payload);
+            }else if(contentType=='favicon'){
+                res.setHeader('Content-type', 'image/x-icon');
+                payloadString=typeof(payload)!=='undefined'?payload:'';
 
-            //Return the response
-            res.setHeader('Content-type', 'application/JSON')
+            }
+            else if(contentType=='css'){
+                res.setHeader('Content-type', 'text/css');
+                payloadString=typeof(payload)!=='undefined'?payload:'';
+
+            }
+            else if(contentType=='png'){
+                res.setHeader('Content-type', 'image/png');
+                payloadString=typeof(payload)!=='undefined'?payload:'';
+
+            }
+            else if(contentType=='jpg'){
+                res.setHeader('Content-type', 'image/jpeg');
+                payloadString=typeof(payload)!=='undefined'?payload:'';
+
+            }
+            else if(contentType=='plain'){
+                res.setHeader('Content-type', 'text/plain');
+                payloadString=typeof(payload)!=='undefined'?payload:'';
+
+            }
+            //Return response-parts that are common to all content types
             res.writeHead(statusCode);
             res.end(payloadString);
 
@@ -132,10 +168,21 @@ server.init=function(){
 
 //Defining a request router
 server.router={
+    '':handlers.index,
+    'account/create':handlers.accountCreate,
+    'account/edit':handlers.accountEdit,
+    'account/deleted':handlers.accountDeleted,
+    'session/create':handlers.sessionCreate,
+    'session/deleted':handlers.sessionDeleted,
+    'checks/all':handlers.checkList,
+    'checks/create':handlers.checksCreate,
+    'checks/edit':handlers.checksEdit,
     'ping': handlers.ping, 
-    'users':handlers.users,
-    'tokens':handlers.tokens,
-    'checks':handlers.checks
+    'api/users':handlers.users,
+    'api/tokens':handlers.tokens,
+    'api/checks':handlers.checks,
+    'favicon.ico':handlers.favicon,
+    'public':handlers.public
 }
 
 

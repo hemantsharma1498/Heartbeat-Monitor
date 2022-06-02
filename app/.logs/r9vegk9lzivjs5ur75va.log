@@ -1,1 +1,0 @@
-{"check":{"id":"r9vegk9lzivjs5ur75va","phone":"9873194941","protocol":"https","url":"yo.com","method":"get","successCodes":[200,201],"timeoutSeconds":3,"state":"down","lastChecked":1654001866674},"outcome":{"error":{"error":true,"value":{"code":"CERT_HAS_EXPIRED"}},"responseCode":false},"state":"down","alert":false,"time":1654001876761}
