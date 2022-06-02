@@ -615,7 +615,7 @@ handlers._tokens.post = function(data,callback){
         let hashedPassword = helpers.hash(password);
         if(hashedPassword == userData.hashedPassword){
           // If valid, create a new token with a random name. Set an expiration date 1 hour in the future.
-          let tokenId = helpers.stringRandomizer(20);
+          let tokenId = helpers.createRandomString(20);
           let expires = Date.now() + 1000 * 60 * 60;
           let tokenObject = {
             'phone' : phone,
@@ -783,7 +783,7 @@ handlers._checks.post = function(data,callback){
             // Verify that user has less than the number of max-checks per user
             if(userChecks.length < config.maxChecks){
               // Create random id for check
-              let checkId = helpers.stringRandomizer(20);
+              let checkId = helpers.createRandomString(20);
 
               // Create check object including userPhone
               let checkObject = {
@@ -798,6 +798,7 @@ handlers._checks.post = function(data,callback){
 
               // Save the object
               _data.create('checks',checkId,checkObject,function(err){
+                console.log(err);
                 if(!err){
                   // Add check id to the user's object
                   userData.checks = userChecks;

@@ -41,46 +41,46 @@ server.httpsServer=https.createServer(server.httpsServerOptions, function(req, r
 //Server logic for both http & https
 server.unifiedServer=function(req, res){
     //Get URL and parse it
-    var parsedUrl=url.parse(req.url, true);
+    let parsedUrl=url.parse(req.url, true);
 
     //Get Path from the URL
-    var path=parsedUrl.pathname;    
-    var trimmedPath=path.replace(/^\/+|\/+$/g, '');
+    let path=parsedUrl.pathname;    
+    let trimmedPath=path.replace(/^\/+|\/+$/g, '');
     
     //Get Query string
-    var queryStringObj=parsedUrl.query;
+    let queryStringObj=parsedUrl.query;
 
     //Get HTTP method
-    var method=req.method.toLowerCase();
+    let method=req.method.toLowerCase();
 
     //Get the headers as an object
-    var headers=req.headers;
+    let headers=req.headers;
 
     //Get the payload if any
-    var decoder=new StringDecoder('utf-8');
-    var buffer='';
+    let decoder=new StringDecoder('utf-8');
+    let buffer='';
     req.on('data', function(data){
         buffer+=decoder.write(data);
     });
-        //To end the stream of data into var buffer
+        //To end the stream of data into let buffer
     req.on('end', function(){
         buffer+=decoder.end();
 
         //Choose handler to route the request to. If not found, route to 404 handler
 
-        var chosenHandler=typeof(server.router[trimmedPath])!== 'undefined'?server.router[trimmedPath]:handlers.notFound;
+        let chosenHandler=typeof(server.router[trimmedPath])!== 'undefined'?server.router[trimmedPath]:handlers.notFound;
 
         //If request is within the public directory, use public handler instead
         chosenHandler=trimmedPath.indexOf('public/')>-1?handlers.public:chosenHandler;
 
         //Construct the data object to send to the handler
 
-        var data={
+        let data={
             'trimmedPath':trimmedPath,
             'queryStringObject':queryStringObj,
             'method':method,
             'headers':headers,
-            'payload':helpers.parsedtoJsonObject(buffer)
+            'payload':helpers.parseJsonToObject(buffer)
         };
 
        

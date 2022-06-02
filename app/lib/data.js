@@ -9,7 +9,7 @@ const path=require('path');
 const helpers = require('./helpers');
 
 //Container for the module (to be exported)
-var lib={};
+let lib={};
 
 //Base directory of the data folder
 lib.baseDir=path.join(__dirname, '/../.data/');
@@ -22,7 +22,7 @@ lib.create=function(dir, file, data, callback){
         if(!err&&fileDescriptor){
             
             //Convert data to string
-            var stringData=JSON.stringify(data);
+            let stringData=JSON.stringify(data);
 
             //Write to file and close it
             fs.writeFile(fileDescriptor, stringData, function(err){
@@ -49,7 +49,7 @@ lib.create=function(dir, file, data, callback){
 lib.read=function(dir, file, callback){
     fs.readFile(lib.baseDir+dir+'/'+file+'.json', 'utf-8', function(err, data){
         if(!err&&data){
-            let parsedData=helpers.parsedtoJsonObject(data);
+            let parsedData=helpers.parseJsonToObject(data);
             callback(false, parsedData);
         }else{
             callback(err, data);
@@ -64,7 +64,7 @@ lib.update=function(dir, file, data, callback){
     //Open the required file
     fs.open(lib.baseDir+dir+'/'+file+'.json', 'r+', function(err, fileDescriptor){
         if(!err&&fileDescriptor){
-            var stringData= JSON.stringify(data);
+            let stringData= JSON.stringify(data);
             //Truncate the contents of the file
             fs.ftruncate(fileDescriptor, function(err){
                 if(!err){
