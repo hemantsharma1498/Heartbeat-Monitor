@@ -291,6 +291,8 @@ handlers.checksEdit = function(data,callback){
   }
 };
 
+
+
 // Favicon
 handlers.favicon = function(data,callback){
   // Reject any request that isn't a GET
@@ -308,6 +310,8 @@ handlers.favicon = function(data,callback){
     callback(405);
   }
 };
+
+
 
 // Public assets
 handlers.public = function(data,callback){

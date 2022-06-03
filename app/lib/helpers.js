@@ -1,23 +1,23 @@
 /*
- * Helpers for various tasks
+ * Helpers for letious tasks
  *
  */
 
 // Dependencies
-var config = require('./config');
-var crypto = require('crypto');
-var https = require('https');
-var querystring = require('querystring');
-var path = require('path');
-var fs = require('fs');
+let config = require('./config');
+let crypto = require('crypto');
+let https = require('https');
+let querystring = require('querystring');
+let path = require('path');
+let fs = require('fs');
 
 // Container for all the helpers
-var helpers = {};
+let helpers = {};
 
 // Parse a JSON string to an object in all cases, without throwing
 helpers.parseJsonToObject = function(str){
   try{
-    var obj = JSON.parse(str);
+    let obj = JSON.parse(str);
     return obj;
   } catch(e){
     return {};
@@ -27,7 +27,7 @@ helpers.parseJsonToObject = function(str){
 // Create a SHA256 hash
 helpers.hash = function(str){
   if(typeof(str) == 'string' && str.length > 0){
-    var hash = crypto.createHmac('sha256', config.hashingSecret).update(str).digest('hex');
+    let hash = crypto.createHmac('sha256', config.hashingSecret).update(str).digest('hex');
     return hash;
   } else {
     return false;
@@ -39,13 +39,13 @@ helpers.createRandomString = function(strLength){
   strLength = typeof(strLength) == 'number' && strLength > 0 ? strLength : false;
   if(strLength){
     // Define all the possible characters that could go into a string
-    var possibleCharacters = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    let possibleCharacters = 'abcdefghijklmnopqrstuvwxyz0123456789';
 
     // Start the final string
-    var str = '';
+    let str = '';
     for(i = 1; i <= strLength; i++) {
         // Get a random charactert from the possibleCharacters string
-        var randomCharacter = possibleCharacters.charAt(Math.floor(Math.random() * possibleCharacters.length));
+        let randomCharacter = possibleCharacters.charAt(Math.floor(Math.random() * possibleCharacters.length));
         // Append this character to the string
         str+=randomCharacter;
     }
@@ -63,16 +63,16 @@ helpers.sendTwilioSms = function(phone,msg,callback){
   if(phone && msg){
 
     // Configure the request payload
-    var payload = {
+    let payload = {
       'From' : config.twilio.fromPhone,
       'To' : '+1'+phone,
       'Body' : msg
     };
-    var stringPayload = querystring.stringify(payload);
+    let stringPayload = querystring.stringify(payload);
 
 
     // Configure the request details
-    var requestDetails = {
+    let requestDetails = {
       'protocol' : 'https:',
       'hostname' : 'api.twilio.com',
       'method' : 'POST',
@@ -85,9 +85,9 @@ helpers.sendTwilioSms = function(phone,msg,callback){
     };
 
     // Instantiate the request object
-    var req = https.request(requestDetails,function(res){
+    let req = https.request(requestDetails,function(res){
         // Grab the status of the sent request
-        var status =  res.statusCode;
+        let status =  res.statusCode;
         // Callback successfully if the request went through
         if(status == 200 || status == 201){
           callback(false);
@@ -117,11 +117,11 @@ helpers.getTemplate = function(templateName,data,callback){
   templateName = typeof(templateName) == 'string' && templateName.length > 0 ? templateName : false;
   data = typeof(data) == 'object' && data !== null ? data : {};
   if(templateName){
-    var templatesDir = path.join(__dirname,'/../templates/');
+    let templatesDir = path.join(__dirname,'/../templates/');
     fs.readFile(templatesDir+templateName+'.html', 'utf8', function(err,str){
       if(!err && str && str.length > 0){
         // Do interpolation on the string
-        var finalString = helpers.interpolate(str,data);
+        let finalString = helpers.interpolate(str,data);
         callback(false,finalString);
       } else {
         callback('No template could be found');
@@ -143,7 +143,7 @@ helpers.addUniversalTemplates = function(str,data,callback){
       helpers.getTemplate('_footer',data,function(err,footerString){
         if(!err && headerString){
           // Add them all together
-          var fullString = headerString+str+footerString;
+          let fullString = headerString+str+footerString;
           callback(false,fullString);
         } else {
           callback('Could not find the footer template');
@@ -161,16 +161,16 @@ helpers.interpolate = function(str,data){
   data = typeof(data) == 'object' && data !== null ? data : {};
 
   // Add the templateGlobals to the data object, prepending their key name with "global."
-  for(var keyName in config.templateGlobals){
+  for(let keyName in config.templateGlobals){
      if(config.templateGlobals.hasOwnProperty(keyName)){
        data['global.'+keyName] = config.templateGlobals[keyName]
      }
   }
   // For each key in the data object, insert its value into the string at the corresponding placeholder
-  for(var key in data){
+  for(let key in data){
      if(data.hasOwnProperty(key) && typeof(data[key] == 'string')){
-        var replace = data[key];
-        var find = '{'+key+'}';
+        let replace = data[key];
+        let find = '{'+key+'}';
         str = str.replace(find,replace);
      }
   }
@@ -181,7 +181,7 @@ helpers.interpolate = function(str,data){
 helpers.getStaticAsset = function(fileName,callback){
   fileName = typeof(fileName) == 'string' && fileName.length > 0 ? fileName : false;
   if(fileName){
-    var publicDir = path.join(__dirname,'/../public/');
+    let publicDir = path.join(__dirname,'/../public/');
     fs.readFile(publicDir+fileName, function(err,data){
       if(!err && data){
         callback(false,data);
