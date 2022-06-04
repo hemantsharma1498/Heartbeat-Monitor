@@ -14,3 +14,7 @@ Or use the CLI (Command Line Interface) as an administrator to check app related
 
 
 Account is validated using tokens, each token has a validity time of 1 hour (duration of a session). Additionally, every time the server is started the exisitng log (.log) files are compressed to save space.
+
+
+
+(NOTE: Create an https directory in the app's folder and create your SSL credentials to check uptime on links using https protocol)
