@@ -1,6 +1,7 @@
 //Dependencies
 let server=require('./lib/server');
 let workers=require('./lib/workers');
+let cli=require('./lib/cli');
 
 //Declare the app
 let app={};
@@ -12,6 +13,11 @@ app.init=function(){
 
     //Start the workers
     workers.init();
+
+    //Start the CLI at last
+    setTimeout(function(){
+        cli.init();
+    }, 50);
 };
 
 //Execute the function
